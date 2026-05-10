@@ -121,58 +121,56 @@ def read_file(file: str) -> pd.DataFrame:
         raise ValueError(f"Unsupported file type {ext}")
     return readers[ext](file_path)
 
-def name_data_vis(file1: str, col1: str, file2: str, col2: str, plot_type: str, extension: str) -> str:
+def name_data_vis(file1: str, col1: str, col2: str, plot_type: str, extension: str, col3: Optional[str] = "", col4: Optional[str] = "") -> str:
     """
     Separate naming function to ensure uniform naming of data visualizations.
     Note: format would change to something more generic or with conditional
     statements as more types of visualizations are added
     """
-    return f"{file1}_{col1}_vs_{file2}_{col2}_{plot_type}.{extension}"
+    vis_name = f"{file1}_{col1}_vs_{col2}"
+    if col3:
+        vis_name += f"_{col3}"
+    if col4:
+        vis_name += f"_{col4}"
+    vis_name += f"_{plot_type}.{extension}"
+    return vis_name
 
 @mcp.tool()
-def create_scatter_plot(file1: str, col1: str, col2: str, file2: Optional[str] = "") -> str:
+def create_scatter_plot(file1: str, col1: str, col2: str, color: Optional[str] = "", hover_name: Optional[str] = "") -> str:
     """
-    Creates a scatter plot using plotly either with two columns from the same file or
-    with two columns from different files.
-    Note: Currently returns an error if the columns do not have the same number of entries.
-    Could be modified later to create some proxy data/noise for the column with less data
-    or remove some of the longer column.
+    Creates a scatter plot using plotly with at least two columns from the same file.
+    Note: Currently only takes a few parameters for plotly.express scatter for prototype,
+    but would realistically be able to take many more parameters. Also, could be modified
+    later to optionally take another file to compare data between different datasets.
 
     Parameter: file1 - name of the file corresponding to col1
-    Parameter: file2 - name of the file corresponding to col2 (if no file2, then assumed col2 corresponds to file1)
-    Parameter: col1 - name of the first column to compare
-    Parameter: col2 - name of the second column to compare
+    Parameter: col1 - name of the first column to compare (x-axis)
+    Parameter: col2 - name of the second column to compare (y-axis)
+    Parameter: color - name of another column to compare (color of the points)
+    Parameter: hover_name - name of another column (displayed when hovering over a point in the scatter plot)
     Returns: message confirming the scatter plot was created and added to data_vis folder
     """
 
-    df1 = read_file(file1)
-    df2 = read_file(file2) if file2 else None
+    df = read_file(file1)
 
     # Check that columns exist in corresponding file
-    if col1 not in df1.columns:
-        return f"Error: '{col1}' not found in {file1}. Available columns: {', '.join(df1.columns)}"
-    if df2 is not None and col2 not in df2.columns:
-        return f"Error: '{col2}' not found in {file2}. Available columns: {', '.join(df2.columns)}"
-    if df2 is None and col2 not in df1.columns:
-        return f"Error: '{col2}' not found in {file1}. Available columns: {', '.join(df1.columns)}"
+    if col1 not in df.columns:
+        return f"Error: '{col1}' not found in {file1}. Available columns: {', '.join(df.columns)}"
+    if col2 not in df.columns:
+        return f"Error: '{col2}' not found in {file1}. Available columns: {', '.join(df.columns)}"
+    if color and color not in df.columns:
+        return f"Error: '{color}' not found in {file1}. Available columns: {', '.join(df.columns)}"
+    elif hover_name and hover_name not in df.columns:
+        return f"Error: '{hover_name}' not found in {file1}. Available columns: {', '.join(df.columns)}"
 
-    if df2 is not None:
-        # Check if the columns have the same number of entries
-        if len(df1) != len(df2):
-            return f"Error: '{file1}' has {len(df1)} rows but '{file2}' has {len(df2)} rows, cannot compare columns of different lengths"
+    fig = px.scatter(
+        df,
+        x=col1,
+        y=col2,
+        color=color if color else None,
+        hover_name=hover_name if hover_name else None)
 
-        x = df1[col1]
-        y = df2[col2]
-        # combine the 2 columns into one dataframe
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=x, y=y, mode="markers"))
-        fig.update_layout(xaxis_title=f"{col1} ({file1})", yaxis_title=f"{col2} ({file2})")
-
-        plot_name = name_data_vis(file1, col1, file2, col2, "scatter", "html")
-    else:
-        fig = px.scatter(df1, x=col1, y=col2)
-
-        plot_name = name_data_vis(file1, col1, file1, col2, "scatter", "html")
+    plot_name = name_data_vis(file1, col1, col2, "scatter", "html", color, hover_name)
 
     fig.update_layout(title=f"{col1} vs {col2}")
     plot_path = os.path.join(DATA_VIS_FOLDER, plot_name)
