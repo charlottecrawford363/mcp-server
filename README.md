@@ -18,18 +18,11 @@ This is a prototype of a data visualization MCP server. It allows the user to up
 - **Memory efficiency vs version history (multiple versions of same plot)**: Each time a data visualization is slightly modified (i.e. adding a column to do color grouping with in a scatter plot), an entirely new file of that plot is created with a specific name to prevent pre-existing visualizations to be overwritten. This is useful in that it essentially contains the version history of the plot if the user wants to look back at the different versions of the plot, but it is very inefficient in terms of memory. 
 
 ## Reflection: Is LLM Integration Worth It?
-### Where it helps
-LLM integration helps in allowing the user to be able to use more natural language in creating data visualizations and not have the burden of handling the code aspect. It also usually allows the user to refer to columns without having to use the precise column name, the LLM correcting the errors itself. If there are errors, it is also able to provide those in a more easily understandable way for humans, leaving room for the user to modify their prompt to fix those errors. The conversations in an LLM is also an easy way to track the user's history of creating visualizations. The use of prompts can be useful as well, like the explore_dataset function that has the LLM view a dataset's columns and suggest interesting visualizations from that. 
+LLM integration helps in allowing the user to be able to use more natural language in creating data visualizations and not have the burden of handling the coding themselves. It also usually allows the user to refer to columns without having to use the precise column name, the LLM correcting the errors itself. If there are errors, it is also able to provide those in a more easily understandable way for humans, leaving room for the user to modify their prompt to fix those errors. The conversations in an LLM are also an easy way to track the user's history of creating visualizations. The use of prompts can be useful as well, like the explore_dataset function that has the LLM view a dataset's columns and suggest interesting visualizations from that, which would be much more difficult to code. 
 
-### Where it struggles
-If a dataset's column names are more ambiguous, like some odd arrangement of numbers and letters that are not easily interpretable (ex. a12), it is more difficult for the LLM to correct any incorrect references to columns. With the current file upload and data visualization retrieval methods, utilizing an LLM is not as efficient or seamless as it could be otherwise
+However, with the current design of the MCP server tools and some other issues that come with it simply being an LLM, it is not as impactful as it could be. If a dataset's column names are more ambiguous, like some odd arrangement of numbers and letters that are not easily interpretable (ex. a12), it is more difficult for the LLM to correct any incorrect references to columns. With the current file upload and data visualization retrieval methods, utilizing an LLM is not as efficient or seamless as it could be otherwise. Additionally, any time a plot is modified (ex. adding one extra column for the hover_name parameter of the scatter plot tool), it creates an entirely new scatter plot file, which could easily cause issues with the memory. 
 
-
-### How design decisions played in
-...
-in regards to whether ai makes this process faster, i'd honestly argue not really
-I think it is very possibly to make a relatively simple interface that would be just as if not
-more effective than creating this as an mcp server
+As I was creating this MCP server, I began wondering how useful LLM integration was compared to something like creating a user interface that carries out the same functions. Aside from prompting, a properly designed user interface could be more effective and remove the issue of natural language by adding something like drop down menus (Column 1, Column 2, Plot Type, etc.) that would also bypass the ambiguity problem. Ultimately, I think that adding features to make the server have a more seamless workflow within the chat and more prompt features that are useful and couldn't be easily implemented into something like the aforementioned user interface would make LLM integration worth it, depending on what the user values in the data visualization creation process.
 
 ## Learning Process
 For basic understanding of what an MCP was and how an MCP server worked: https://modelcontextprotocol.io/docs/getting-started/intro 
@@ -59,7 +52,7 @@ Some of the main challenges I faced:
   }
 ```
 - As I was creating the scatter plot creation tool using the plotly scatter function, I quickly realized there were a lot more parameters than I was expecting. To keep it cleaner for the prototype, I only added a few of those parameters, but for the most freedom in user styling, these parameters would need to be added to the mcp.tool() as well, as well as a more efficient way to check/validate those parameters. 
-### To be added
+### Future Additions
 - Direct file upload functionality
 - Data visualization display in LLM chat
 - File deletion (most likely with a parameter that allows a user to specify if, when deleting a dataset, they want all associated data visualizations to be deleted as well)
