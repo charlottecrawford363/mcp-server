@@ -1,3 +1,50 @@
+# MCP Data Visualization Server
+
+## Overview
+Brief description of what the server does and how it works.
+
+## Design Choices & Assumptions
+### Simplifications
+- Absolute path uploading instead of direct file upload
+- Single visualization type (scatter plot)
+- Single shared data_vis folder rather than per-dataset folders
+- Parameters calibrated qualitatively rather than from data
+
+### Tradeoffs
+- File upload method (absolute path vs chunking vs direct upload)
+- Visualization retrieval (browser vs in-conversation)
+- Cross-dataset comparisons and mismatched column lengths
+- Memory efficiency vs version history (multiple versions of same plot)
+
+### Known Issues & Limitations
+- No in-place visualization editing (creates new file each time)
+- No numeric column validation before plotting
+- Cross-dataset plots limited to same-length columns
+- File retrieval opens in browser rather than inline
+
+## Reflection: Is LLM Integration Worth It?
+### Where it helps
+- Natural language column selection
+- No need to write plotting code manually
+- Self-correcting on column name errors
+
+### Where it struggles
+- Ambiguous column names require clarification
+- No memory between sessions
+- Iterating on the same plot creates file bloat
+
+### How design decisions played in
+...
+
+## Learning Process
+### What I built
+### Challenges I ran into
+### What I would do differently
+### What I would add next
+
+
+
+
 
 Installation:
 download uv

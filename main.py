@@ -4,7 +4,6 @@ import os
 import shutil
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import webbrowser
 
 mcp = FastMCP("Data Visualization MCP")
@@ -14,6 +13,7 @@ DATA_FOLDER = os.path.join(os.path.dirname(__file__), "datasets")
 DATA_VIS_FOLDER = os.path.join(os.path.dirname(__file__), "data_vis")
 
 ALLOWED_EXTENSIONS = {".csv", ".xlsx", ".xls"} # add others later
+AVAILABLE_VIS = {"scatter plot"} # available visualizations methods
 
 def ensure_folders():
     """
@@ -30,9 +30,7 @@ def list_datasets() -> str:
     Returns: list of datasets currently in the datasets folder
     """
     datasets = os.listdir(DATA_FOLDER)
-    if not datasets:
-        return "No datasets found"
-    return "\n".join(datasets)
+    return "\n".join(datasets) if datasets else "No datasets found."
 
 @mcp.tool()
 def list_data_vis() -> str:
@@ -40,9 +38,7 @@ def list_data_vis() -> str:
     Returns: list of data visualizations currently in the data_vis folder
     """
     data_vis = os.listdir(DATA_VIS_FOLDER)
-    if not data_vis:
-        return "No data visualizations found"
-    return "\n".join(data_vis)
+    return "\n".join(data_vis) if data_vis else "No data visualizations found."
 
 @mcp.tool()
 def add_dataset(filename: str, overwrite: Optional[bool] = False, rename: Optional[str] = "") -> str:
@@ -144,8 +140,8 @@ def create_scatter_plot(file1: str, col1: str, col2: str, color: Optional[str] =
     later to optionally take another file to compare data between different datasets.
 
     Parameter: file1 - name of the file corresponding to col1
-    Parameter: col1 - name of the first column to compare (x-axis)
-    Parameter: col2 - name of the second column to compare (y-axis)
+    Parameter: col1 - name of the first column to compare (numeric, x-axis)
+    Parameter: col2 - name of the second column to compare (numeric, y-axis)
     Parameter: color - name of another column to compare (color of the points)
     Parameter: hover_name - name of another column (displayed when hovering over a point in the scatter plot)
     Returns: message confirming the scatter plot was created and added to data_vis folder
@@ -154,15 +150,24 @@ def create_scatter_plot(file1: str, col1: str, col2: str, color: Optional[str] =
     df = read_file(file1)
 
     # Check that columns exist in corresponding file
-    if col1 not in df.columns:
+    cols = df.columns
+    if col1 not in cols:
         return f"Error: '{col1}' not found in {file1}. Available columns: {', '.join(df.columns)}"
-    if col2 not in df.columns:
+    if col2 not in cols:
         return f"Error: '{col2}' not found in {file1}. Available columns: {', '.join(df.columns)}"
-    if color and color not in df.columns:
+    if color and color not in cols:
         return f"Error: '{color}' not found in {file1}. Available columns: {', '.join(df.columns)}"
-    elif hover_name and hover_name not in df.columns:
+    elif hover_name and hover_name not in cols:
         return f"Error: '{hover_name}' not found in {file1}. Available columns: {', '.join(df.columns)}"
 
+    # Check that the x and y axes are from numeric columns
+    numeric_cols = df.select_dtypes(include="number").columns
+    if col1 not in numeric_cols:
+        return f"Error: '{col1}' does not contain numeric values. Available numeric columns: {', '.join(numeric_cols)}"
+    if col2 not in numeric_cols:
+        return f"Error: '{col2}' does not contain numeric values. Available numeric columns: {', '.join(numeric_cols)}"
+
+    # Create scatter plot
     fig = px.scatter(
         df,
         x=col1,
@@ -178,6 +183,27 @@ def create_scatter_plot(file1: str, col1: str, col2: str, color: Optional[str] =
 
     return f"Scatter plot saved! {plot_name}"
 
+@mcp.resource("datasets://{filename}/columns")
+def get_columns(filename: str) -> str:
+    """
+    Returns a list of the specified dataset's columns separated by commas
+    """
+    df = read_file(filename)
+    return ", ".join(df.columns)
+
+@mcp.prompt()
+def explore_dataset(filename: str):
+    """
+    Based on the columns and which ones are numeric, prompts to suggest interesting
+    data visualizations
+    """
+    df = read_file(filename)
+    columns = get_columns(filename)
+    numeric_cols = ", ".join(df.select_dtypes(include="number").columns)
+    return (
+        f"The dataset {filename} has columns: {columns}. The numeric columns are {numeric_cols}."
+        f"Suggest interesting visualizations based on the available visualizations in {AVAILABLE_VIS} and what those visualizations may reveal about the dataset"
+    )
 
 if __name__ == "__main__":
     mcp.run()
