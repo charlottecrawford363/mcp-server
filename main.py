@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.express as px
 import webbrowser
 
-mcp = FastMCP("Data Visualization MCP")
+mcp = FastMCP("Data_Visualization_MCP")
 
 # Paths to dataset and data visualization folders within mcp-server directory
 DATA_FOLDER = os.path.join(os.path.dirname(__file__), "datasets")
@@ -94,6 +94,7 @@ def return_data_vis(data_vis: str) -> str:
     path = os.path.join(DATA_VIS_FOLDER, data_vis)
     if not os.path.exists(path):
         return f"Error: '{data_vis}' not found"
+    # Open the data visualization in the user's browser
     webbrowser.open(f"file:///{path}")
     return f"Visualization {data_vis} opened in web browser"
 
@@ -106,6 +107,7 @@ def read_file(file: str) -> pd.DataFrame:
     if not os.path.exists(file_path):
         raise ValueError(f"File {file} not found in uploaded datasets")
 
+    # Read the file based on its extension
     ext = os.path.splitext(file)[1].lower()
     readers = {
         ".csv": lambda f: pd.read_csv(f),
