@@ -3,6 +3,8 @@
 ## Overview
 This is a prototype of a local data visualization MCP (Model Context Protocol) server that can be integrated with Claude Desktop. It allows the user to upload datasets and generate static and interactive data visualizations through natural lanugage conversation with the LLM. This server was built using FastMCP in Python, utilizing Pandas for data processing and Plotly for data visualization generation. Users are able to upload datasets by providing the absolute local file path, ask Claude to generate scatter plots comparing at least two user-specified columns (with optional color grouping and hover labels), and have the resulting visualizations opened directly in their web browser. This server currently accepts CSV and Excel file types.
 
+Example Usage with Claude: https://drive.google.com/file/d/1LwfGu9D4Qe1nIn-ENkXzwlZyJZFKbaWc/view?usp=sharing
+
 ## Design Choices & Assumptions
 ### Simplifications
 - **File upload through absolute path**: The add_dataset tool currently takes the absolute path of the file on the local machine instead of a direct file upload. It uses the copyfile() method from the shutil to then copy that file into servers's dataset folder which helps avoid issues that come with the file size at the cost of the user's convenience. Some method of chunk-based uploading would likely be best to avoid file size issues.
